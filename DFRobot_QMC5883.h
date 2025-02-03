@@ -19,6 +19,7 @@
 #endif
 #include <Wire.h>
 
+
 #define HMC5883L_ADDRESS             (0x1E)
 #define QMC5883_ADDRESS              (0x0D)
 #define VCM5883L_ADDRESS             (0x0C)
@@ -133,6 +134,8 @@ typedef struct
   float   AngleXZ;
   float   AngleYZ;
   float   HeadingDegress;
+  float   HeadingDegress_LPF;//lowpass filetered
+  float   HeadingDegress_KF;//Kalman filtered
 } sVector_t;
 #endif
 
@@ -140,6 +143,10 @@ class DFRobot_QMC5883
 {
   public:
     DFRobot_QMC5883(TwoWire*pWire = &Wire, uint8_t I2C_addr = 0x0C);
+      // FILTERING
+
+    
+    
     /**
      * @fn begin
      * @brief Sensor init
@@ -265,6 +272,7 @@ class DFRobot_QMC5883
      * @brief Set the sensor range
      */
     void getHeadingDegrees(void);
+    float getHeadingDEG_FLOAT(void);
 
     /**
      * @fn getICType
@@ -299,6 +307,9 @@ class DFRobot_QMC5883
      * @retval false it isn't
      */
     bool isVCM(void){if(ICType == IC_VCM5883L ){return true;}return false;}
+
+
+
   private:
     void writeRegister8(uint8_t reg, uint8_t value);
     uint8_t readRegister8(uint8_t reg);
@@ -317,6 +328,10 @@ class DFRobot_QMC5883
     float minY, maxY;
     float minZ, maxZ;
     bool firstRun;
+
+
+
+
 };
 
 #endif
