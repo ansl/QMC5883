@@ -3,7 +3,7 @@
  * @brief Compatible with QMC5883 HMC5883 and VMC5883
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license     The MIT License (MIT)
- * @author      PengKaixing(kaixing.peng@dfrobot.com)
+ * @author      PengKaixing(kaixing.peng@dfrobot.com) edited by luengoa
  * @version  V1.0.0
  * @date  2022-2-23
  * @url https://github.com/DFRobot/DFRobot_QMC5883
