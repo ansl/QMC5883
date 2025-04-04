@@ -19,6 +19,7 @@
 #endif
 #include <Wire.h>
 
+#define COMPASS_OFFSET PI
 
 #define HMC5883L_ADDRESS             (0x1E)
 #define QMC5883_ADDRESS              (0x0D)
@@ -162,7 +163,7 @@ class DFRobot_QMC5883
      * @return sVector_t The data collected by the sensor
      */
     sVector_t readRaw(void);
-
+sVector_t readRaw_N(void);
     /**
      * @fn setRange
      * @brief Set sensor signal gain range
@@ -273,7 +274,7 @@ class DFRobot_QMC5883
      */
     void getHeadingDegrees(void);
     float getHeadingDEG_FLOAT(void);
-
+    void calibrate(void);
     /**
      * @fn getICType
      * @brief Get sensor type
@@ -324,9 +325,9 @@ class DFRobot_QMC5883
     float mgPerDigit;
     float Gauss_LSB_XY = 1090.0;
     sVector_t v;
-    float minX, maxX;
-    float minY, maxY;
-    float minZ, maxZ;
+    int16_t minX, maxX;
+    int16_t minY, maxY;
+    int16_t minZ, maxZ;
     bool firstRun;
 
 

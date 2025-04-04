@@ -14,12 +14,21 @@ DFRobot_QMC5883::DFRobot_QMC5883(TwoWire *pWire, uint8_t I2C_addr)
 {
   isHMC_ = false;
   isQMC_ = false;
-  minX = 0;
-  maxX = 0;
-  minY = 0;
-  maxY = 0;
-  minZ = 0;
-  maxZ = 0;
+
+  //minX:-1033 maxX:1516 minY:-521 maxY:2095 minZ:-1300 maxZ:1663
+  minX = -1033;
+  maxX = 1516;
+  minY = -521;
+  maxY = 2095;
+  minZ = -1300;
+  maxZ = 1663;
+  //minX:-940 maxX:1413 minY:-426 maxY:1873 minZ:-1278 maxZ:1276
+  //   minX = -0;
+  // maxX = 0;
+  // minY = -0;
+  // maxY = 0;
+  // minZ = -0;
+  // maxZ = 0;
   firstRun = true;
   this->_pWire = pWire;
   this->_I2C_addr = I2C_addr;
@@ -113,6 +122,59 @@ bool DFRobot_QMC5883::begin(void)
   return ret;
 }
 
+void  DFRobot_QMC5883::calibrate(void){
+
+  readRaw();
+
+    if(minX > v.XAxis){
+      minX = v.XAxis;
+    }
+    if(maxX < v.XAxis){
+      maxX = v.XAxis;
+    }
+    if(minY > v.YAxis){
+      minY = v.YAxis;
+    }    
+    if(maxY < v.YAxis){
+      maxY = v.YAxis;
+    }
+    if(minZ > v.ZAxis){
+      minZ = v.ZAxis;
+    }
+    if(maxZ < v.ZAxis){
+      maxZ = v.ZAxis;  
+    }
+    Serial.printf("minX:%d maxX:%d minY:%d maxY:%d minZ:%d maxZ:%d \n", minX, maxX, minY, maxY, minZ, maxZ);
+}
+sVector_t DFRobot_QMC5883::readRaw_N(void)
+{
+  if (ICType == IC_HMC5883L)
+  {
+    v.XAxis = readRegister16(HMC5883L_REG_OUT_X_M);
+    v.YAxis = readRegister16(HMC5883L_REG_OUT_Y_M);
+    v.ZAxis = readRegister16(HMC5883L_REG_OUT_Z_M);
+  }
+  else if (ICType == IC_QMC5883)
+  {
+    v.XAxis = readRegister16(QMC5883_REG_OUT_X_L);
+    v.YAxis = readRegister16(QMC5883_REG_OUT_Y_L);
+    v.ZAxis = readRegister16(QMC5883_REG_OUT_Z_L);
+    v.XAxis = ((v.XAxis - minX) * 2500 / (maxX - minX))-1250;
+    v.YAxis = ((v.YAxis - minY) * 2500 / (maxY - minY))-1250; 
+    v.ZAxis = ((v.ZAxis - minZ) * 2500 / (maxZ - minZ))-1250;
+
+  }
+  else if (ICType == IC_VCM5883L)
+  {
+    v.XAxis = -readRegister16(VCM5883L_REG_OUT_X_L);
+    v.YAxis = -readRegister16(VCM5883L_REG_OUT_Y_L);
+    v.ZAxis = -readRegister16(VCM5883L_REG_OUT_Z_L);
+  }
+  v.AngleXY = (atan2((double)v.YAxis, (double)v.XAxis) * (180 / 3.14159265) + 180);
+  v.AngleXZ = (atan2((double)v.ZAxis, (double)v.XAxis) * (180 / 3.14159265) + 180);
+  v.AngleYZ = (atan2((double)v.ZAxis, (double)v.YAxis) * (180 / 3.14159265) + 180);
+  return v;
+}
 sVector_t DFRobot_QMC5883::readRaw(void)
 {
   if (ICType == IC_HMC5883L)
@@ -126,6 +188,7 @@ sVector_t DFRobot_QMC5883::readRaw(void)
     v.XAxis = readRegister16(QMC5883_REG_OUT_X_L);
     v.YAxis = readRegister16(QMC5883_REG_OUT_Y_L);
     v.ZAxis = readRegister16(QMC5883_REG_OUT_Z_L);
+
   }
   else if (ICType == IC_VCM5883L)
   {
@@ -392,8 +455,9 @@ void DFRobot_QMC5883::getHeadingDegrees(void)
 }
 float DFRobot_QMC5883::getHeadingDEG_FLOAT(void)
 {
-  sVector_t x = readRaw();
-  float heading = atan2(x.YAxis, x.XAxis);
+  sVector_t x = readRaw_N();
+  float heading = atan2(x.YAxis, x.XAxis)-COMPASS_OFFSET;
+  
   heading += this->ICdeclinationAngle;
   if (heading < 0)
     heading += 2 * PI;
